@@ -21,7 +21,7 @@ module ALU(inputA, inputB, exeCommand, carryIn, result, statusOut);
 			4'b 0010: {carry,result} = inputA + inputB; //ADD
 			4'b 0011: {carry,result} = inputA + inputB + carryIn; //ADC
 			4'b 0100: {carry,result} = inputA - inputB; //SUB
-			4'b 0101: {carry,result} = inputA - inputB - 1; //SBC
+			4'b 0101: {carry,result} = inputA - inputB - ~carryIn; //SBC
 			4'b 0110: result = inputA & inputB; //AND
 			4'b 0111: result = inputA | inputB; //ORR
 			4'b 1000: result = inputA ^ inputB; //EOR
