@@ -1,68 +1,50 @@
-module stage3(clk, rst, r1, r2, disp_const, aluBInputSel, ZOutput, COutput, shiftCount,
-		ALUOperation, ALUOUT, ZEn, CEn, aluInputAForwardingSel, aluInputBForwardingSel,
-		Ex_Mem_aluResult, Mem_Wb_aluResult);
-	input clk, rst;
-	input [7:0] r1, r2, disp_const;
-	input [3:0] ALUOperation;
-	input aluBInputSel;
-	input [1:0] aluInputAForwardingSel, aluInputBForwardingSel;
-	input [7:0] Ex_Mem_aluResult, Mem_Wb_aluResult;
-	wire ZInput, CInput;
-	output ZOutput, COutput;
-	input [2:0] shiftCount;
-	output [7:0] ALUOUT;
-	input ZEn, CEn;
-	wire [7:0] A, B, aluInputA, aluInputB;
-	assign A = r1;
+module stage3(clk, MEM_WB_EN, MEM_R_EN, MEM_W_EN, EXE_CMD, S, PCIn, RNVal, RMVal, Imm, ShiftOperand, SignedImmediate, DestIn, CarryIn,
+						 ALUToSReg, ALUOut, RMValOut, MEM_R_ENOut, MEM_WB_ENOut, MEM_W_ENOut, DestOut, BranchAddress);
+	
+	input clk, MEM_WB_EN, MEM_R_EN, MEM_W_EN;
+	input[3:0] EXE_CMD;
+	input S;
+	input[31:0] PCIn, RNVal, RMVal;
+	input Imm;
+	input[11:0] ShiftOperand;
+	input[23:0] SignedImmediate;
+	input[3:0] DestIn;
+	input CarryIn;
+	output[3:0] ALUToSReg;
+	output[31:0] ALUOut, RMValOut;
+	output MEM_R_ENOut, MEM_WB_ENOut, MEM_W_ENOut;
+	output[3:0] DestOut;
+	output[31:0] BranchAddress;
 
-	mux_3_input #(.WORD_LENGTH(8)) aluInputAForwardingMux (     // mux 6
-		.in1(A), 
-		.in2(Ex_Mem_aluResult), 
-		.in3(Mem_Wb_aluResult), 
-		.sel(aluInputAForwardingSel), 
-		.out(aluInputA)
+	wire ldOrStr;
+	OR or1(
+		.a(MEM_R_EN),
+		.b(MEM_W_EN),
+		.out(ldOrStr)
 	);
 
-	mux_3_input #(.WORD_LENGTH(8)) aluInputBForwardingMux (     // mux 7
-		.in1(B), 
-		.in2(Ex_Mem_aluResult), 
-		.in3(Mem_Wb_aluResult), 
-		.sel(aluInputBForwardingSel), 
-		.out(aluInputB)
+	wire[31:0] val2Out;
+	val2Generator val2Gen(
+		.RMVal(RMVal), 
+		.Imm(Imm), 
+		.ShiftOperand(ShiftOperand), 
+		.LdOrStr(ldOrStr), 
+		.result(val2Out)
 	);
 
-	mux_2_input  #(.WORD_LENGTH (8)) aluBInputMux (    //mux 3
-		.in1(r2), 
-		.in2(disp_const), 
-		.sel(aluBInputSel), 
-		.out(B)
+	ALU aluUnit(
+		.inputA(RMVal), 
+		.inputB(val2), 
+		.exeCommand(EXE_CMD), 
+		.carryIn(CarryIn), 
+		.result(ALUOut), 
+		.statusOut(ALUToSReg)
 	);
 
-	ALU alu(
-		.inputA(aluInputA),
-		.inputB(aluInputB),
-		.carryIn(CInput),
-		.operation(ALUOperation),
-		.result(ALUOUT),
-		.carryOut(COutput),
-		.zero(ZOutput),
-		.shiftCount(shiftCount)
-	);	
-
-
-	registerWitEnb #(.size(1)) C(
-		.clock(clk),
-		.reset(rst),
-		.enable(CEn),
-		.regIn(COutput),
-		.regOut(CInput)
+	BranchAddressCalcder #(.size(32)) BranchAddressCalc(
+		.inputA(PCIn),
+		.inputB( { {8{SignedImmediate[23]}}, SignedImmediate} ),
+		.result(BranchAddress)
 	);
 
-	// registerWitEnb #(.size(1)) Z(
-	// 	.clock(clk),
-	// 	.reset(rst),
-	// 	.enable(ZEn),
-	// 	.regIn(ZInput),
-	// 	.regOut(ZOutput)
-	// );
 endmodule
