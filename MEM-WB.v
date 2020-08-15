@@ -1,19 +1,16 @@
-module MEM_WB_pipeline(clk, rst, enb, IData, IaluResult, Idest, IregWrite, IregWriteDataSel, OData, OaluResult, Odest, OregWrite, OregWriteDataSel);
-	input clk, rst;
-	
-	input [7:0] IData, IaluResult;
-	input [2:0] Idest;
-	input IregWrite, IregWriteDataSel, enb;
+module MEM_WB_pipeline(clk, rst, MEM_WB_ENIn, MEM_R_ENIn, ALUResIn, DataMemResIn, DestIn, MEM_WB_ENOut, MEM_R_ENOut, ALUResOut,
+						DataMemResOut, DestOut);
+	input clk, rst, MEM_WB_ENIn, MEM_R_ENIn;
+	input[31:0] ALUResIn, DataMemResIn;
+	input[3:0] DestIn;
+	output reg MEM_WB_ENOut, MEM_R_ENOut;
+	output reg[31:0] ALUResOut, DataMemResOut;
+	output reg[3:0] DestOut;
 
-	output [7:0] OData, OaluResult;
-	output [2:0] Odest;
-	output OregWrite, OregWriteDataSel;
-
-	registerWitEnb #(.size(21)) Reg(
-		.clock(clk),
-		.reset(rst),
-		.enable(enb),
-		.regIn({IData, IaluResult, Idest, IregWrite, IregWriteDataSel}),
-		.regOut({OData, OaluResult, Odest, OregWrite, OregWriteDataSel })
+	registerWithNegEdge  #(.size(68)) Reg(
+		.clock(clk), 
+		.reset(rst), 
+		.regIn({MEM_WB_ENIn,MEM_R_ENIn,ALUResIn,DataMemResIn,DestIn}), 
+		.regOut({MEM_WB_ENOut,MEM_R_ENOut,ALUResOut,DataMemResOut,DestOut})
 	);
 endmodule
