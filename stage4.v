@@ -6,6 +6,10 @@ module stage4(clk, MEM_WB_EN, MEM_R_EN, MEM_W_EN, ALUOut, RMVal, DestIn, dataMem
 	output MEM_WB_ENOut, MEM_R_ENOut;
 	output[3:0] DestOut;
 	
+	assign MEM_WB_ENOut = MEM_WB_EN;
+	assign MEM_R_ENOut = MEM_R_EN;
+	assign DestOut = DestIn;
+	
 	dataMemory DM(
 		.clock(clk), 
 		.memWrite(MEM_W_EN), 

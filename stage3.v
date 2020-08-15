@@ -16,6 +16,12 @@ module stage3(clk, MEM_WB_EN, MEM_R_EN, MEM_W_EN, EXE_CMD, S, PCIn, RNVal, RMVal
 	output[3:0] DestOut;
 	output[31:0] BranchAddress;
 
+	assign RMValOut = RMVal;
+	assign MEM_R_ENOut = MEM_R_EN;
+	assign MEM_WB_ENOut = MEM_WB_EN;
+	assign MEM_W_ENOut = MEM_W_EN;
+	assign DestOut = DestIn;
+
 	wire ldOrStr;
 	OR or1(
 		.a(MEM_R_EN),
