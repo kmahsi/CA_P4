@@ -1,25 +1,30 @@
-module ID_EX_pipline(clk, rst, enb, Ir1, Ir2, Iconst_disp, Isc, Idest,IaluFunction, IAluInputBSel, IDMMemWrite, IregWrite, IregWriteDataSel, IZenb, ICenb, Ir1Address, Ir2Address, Or1, Or2, Oconst_dOsp, Osc, Odest, OaluFunction, OAluInputBSel, ODMMemWrite, OregWrite, OregWriteDataSel, OZenb, OCenb, Or1Address, Or2Address);
-	input clk, rst;
+module ID_EX_pipeline(clk, rst, BranchTaken, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn, EXE_CMDIn, BIn, SIn, PCIn, RNValIn, RMValIn,
+						ImmIn, ShifOperandIn, SignedImmIn, DestIn, CarryIn, MEM_WB_ENOut, MEM_R_ENOut, MEM_W_ENOut, EXE_CMDOut,
+						BOut, SOut, PCOut, RNValOut, RMValOut, ImmOut, ShifOperandOut, SignedImmOut, DestOut, CarryOut);
+	input clk, rst, BranchTaken, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn;
+	input[3:0] EXE_CMDIn;
+	input BIn, SIn;
+	input[31:0] PCIn, RNValIn, RMValIn;
+	input ImmIn;
+	input[11:0] ShifOperandIn;
+	input[23:0] SignedImmIn;
+	input DestIn;
+	input[3:0] CarryIn;
+	output reg MEM_WB_ENOut, MEM_R_ENOut, MEM_W_ENOut;
+	output reg[3:0] EXE_CMDOut;
+	output reg BOut, SOut;
+	output reg[31:0] PCOut, RNValOut, RMValOut;
+	output reg ImmOut;
+	output reg[11:0] ShifOperandOut;
+	output reg[23:0] SignedImmOut;
+	output reg[3:0] DestOut;
+	output reg CarryOut;
 
-	input [7:0]Ir2, Ir1, Iconst_disp;
-	input [2:0]Isc, Idest;
-	input [3:0] IaluFunction;
-	input IAluInputBSel, IDMMemWrite, IregWrite, IregWriteDataSel;
-	input IZenb, ICenb, enb;
-	input [2:0] Ir1Address, Ir2Address;
-	output [7:0]Or2, Or1, Oconst_dOsp;
-	output [2:0]Osc, Odest;
-	output [3:0] OaluFunction;
-	output OAluInputBSel, ODMMemWrite, OregWrite, OregWriteDataSel;
-	output OZenb, OCenb;
-	input [2:0] Or1Address, Or2Address;
-
-	registerWitEnb #(.size(46)) Reg(
-		.clock(clk),
-		.reset(rst),
-		.enable(enb),
-		.regIn({Ir1, Ir2, Iconst_disp, Isc, Idest, IaluFunction, IAluInputBSel, IDMMemWrite, IregWrite, IregWriteDataSel, ICenb, IZenb, Ir1Address, Ir2Address}),
-		.regOut({Or1, Or2, Oconst_dOsp, Osc, Odest, OaluFunction, OAluInputBSel, ODMMemWrite, OregWrite, OregWriteDataSel, OCenb, OZenb, Or1Address, Or2Address})
-	);
+	registerWithNegEdge  #(.size(147)) Reg(
+		.clock(clk), 
+		.reset(rst), 
+		.regIn({MEM_WB_ENIn,MEM_R_ENIn,MEM_W_ENIn,EXE_CMDIn,BIn,SIn,PCIn,RNValIn,RMValIn,ImmIn,ShifOperandIn,SignedImmIn,DestIn,CarryIn}), 
+		.regOut({MEM_WB_ENOut,MEM_R_ENOut,MEM_W_ENOut,EXE_CMDOut,BOut,SOut,PCOut,RNValOut,RMValOut,ImmOut,ShifOperandOut,SignedImmOut,DestOut,CarryOut})
+	); 
 
 endmodule
