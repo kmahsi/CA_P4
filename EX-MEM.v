@@ -3,11 +3,11 @@ module EX_MEM_pipeline(clk, rst, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn, ALUResIn, 
 	input clk, rst, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn;
 	input[31:0] ALUResIn, RMValIn;
 	input[3:0] DestIn;
-	output reg MEM_WB_ENOut, MEM_R_ENOut, MEM_W_ENOut;
-	output reg[31:0] ALUResOut, RMValOut;
-	output reg[3:0] DestOut;
+	output MEM_WB_ENOut, MEM_R_ENOut, MEM_W_ENOut;
+	output [31:0] ALUResOut, RMValOut;
+	output [3:0] DestOut;
 
-	registerWithNegEdge  #(.size(69)) Reg(
+	register  #(.size(71)) Reg(
 		.clock(clk), 
 		.reset(rst), 
 		.regIn({MEM_WB_ENIn,MEM_R_ENIn,MEM_W_ENIn,ALUResIn,RMValIn,DestIn}), 

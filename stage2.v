@@ -3,12 +3,14 @@ module stage2(clk, rst, init, instruction, Hazard, WB_Dest, WB_Value, WB_WB_EN, 
 	
 	input clk, rst, init;
 	input [31:0] instruction;
-	input WB_WB_EN, SregOut;
+	input WB_WB_EN;
+	input[3:0] SregOut;
 	input [3:0] WB_Dest;
 	input [31:0] WB_Value;
 	input Hazard;
 	wire[8:0] ControllerOutput;
-	output MEM_WB_EN, MEM_R_EN, MEM_W_EN, B, S, two_src, OutImm, SignImm24Out;
+	output MEM_WB_EN, MEM_R_EN, MEM_W_EN, B, S, two_src, OutImm;
+	output[23:0] SignImm24Out;
 	output [3:0] EXE_CMD, DestOut;
 	output [11:0] ShiftOperandOut;
 	wire ConditionCheckOut;
@@ -21,7 +23,7 @@ module stage2(clk, rst, init, instruction, Hazard, WB_Dest, WB_Value, WB_WB_EN, 
 	assign Rm = instruction[3:0];
 	assign two_src = MEM_W_EN | (^ (instruction[25]));
 	assign OutImm = instruction[25];
-	assign ShiftOperandOut = instruction[11:0];
+	assign ShiftOperandOut = instruction[23:0];
 	assign SignImm24Out = instruction[25];
 	assign DestOut = Rd;
 
@@ -35,14 +37,14 @@ module stage2(clk, rst, init, instruction, Hazard, WB_Dest, WB_Value, WB_WB_EN, 
 	);
 
 	ConditionCheck CCHECK(
-		.cond(instruction[31:28]),
-		.stRegister(SregOut),
-		.out(ConditionCheckOut)
+		.Cond(instruction[31:28]),
+		.Status(SregOut),
+		.result(ConditionCheckOut)
 	);
 	
-	mux_2_input  #(.WORD_LENGTH (4)) MUX3 (    //mux 8
+	mux_2_input  #(.WORD_LENGTH (9)) MUX3 (    //mux 8
 		.in1(ControllerOutput), 
-		.in2(0), 
+		.in2(9'd 0), 
 		.sel(Hazard | (^ConditionCheckOut)), 
 		.out({MEM_WB_EN, MEM_R_EN, MEM_W_EN, EXE_CMD, B, S})
 	);

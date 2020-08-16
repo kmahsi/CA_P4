@@ -40,14 +40,14 @@ module stage3(clk, MEM_WB_EN, MEM_R_EN, MEM_W_EN, EXE_CMD, S, PCIn, RNVal, RMVal
 
 	ALU aluUnit(
 		.inputA(RMVal), 
-		.inputB(val2), 
+		.inputB(val2Out), 
 		.exeCommand(EXE_CMD), 
 		.carryIn(CarryIn), 
 		.result(ALUOut), 
 		.statusOut(ALUToSReg)
 	);
 
-	BranchAddressCalcder #(.size(32)) BranchAddressCalc(
+	adder #(.size(32)) BranchAddressCalc(
 		.inputA(PCIn),
 		.inputB( { {8{SignedImmediate[23]}}, SignedImmediate} ),
 		.result(BranchAddress)

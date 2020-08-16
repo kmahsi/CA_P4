@@ -9,16 +9,18 @@ module pipeline(clk, rst, init);
 	wire [3:0] step5OutputWB_Dest;
 	wire [31:0] stage5OutputWB_Value;
 	wire stage2OutputMemWBEnb, stage2OutputMEM_R_EN, stage2OutputB, stage2OutputS, stage2OutputTwoSource, 
-				stage2OutputOutImm, stage2OutputSignImm24Out, stage2OUtputMemWEn;
+				stage2OutputOutImm, stage2OUtputMemWEn;
+	wire [23:0] stage2OutputSignImm24Out;
 	wire [3:0] stage2OutputExeCmd;
-	wire stage2InputSregOut;
+	wire [3:0] stage2InputSregOut;
 	wire [11:0] stage2OUtputShiftOperandOut, pipeline2OutputShiftOperand;
 	wire [3:0]  stage2OUtputDestOut, pipeline2OutputDest;
 	wire [31:0] stage2OutputValRn, stage2OutputValRm, pipeline2OutputPC, pipeline2OutputRN, pipeline2OutputRM;
 	wire [3:0] StatusRegisterCarryOut;
 	wire [3:0] pipeline2OutputExeCmd, HazaradSource2;
 	wire pipeline2OutputMemWbEn, pipeline2OutputMemREN, pipeline2OutputMemWEn, pipeline2OutputB, 
-				pipeline2OutputS, pipeline2OutputImm, pipeline2OutputSignedImm, pipeline2OutputCarry;
+				pipeline2OutputS, pipeline2OutputImm, pipeline2OutputCarry;
+	wire [23:0] pipeline2OutputSignedImm;
 	wire pipeline4OutMemWbEn, pipeline4OutMemREn ;
 	wire [3:0] stage3OutAluToSreg, stage3OutDest;
 
@@ -32,7 +34,7 @@ module pipeline(clk, rst, init);
 		.InstMemoryOut(pipeline1InputInstruction)
 	);	
 
-	IF_ID_pipline if_id(
+	IF_ID_pipeline if_id(
 		.clk(clk),
 		.rst(rst),
 		.Hazard(hazardDetectionOutputHazard), 
@@ -70,23 +72,13 @@ module pipeline(clk, rst, init);
 	);
 
 
-	hazardUnit hazard(
-		src1(stage2OutputValRn),
-		src2(HazaradSource2),
-		TwoSrc(stage2OutputTwoSource),
-		MEM_Dest(pipeline3OutDestOut),
-		MEM_WB_EN(pipeline3OutMemWbEn),
-		EXE_Dest(pipeline2OutputDest),
-		EXE_WB_EN(pipeline2OutputMemWbEn),
-		Hazard (hazardDetectionOutputHazard)
-	);
-
+	
 	statusRegister stRegister(
 		.S(pipeline2OutputS),
 		.newStatus(stage3OutAluToSreg),
 		.result(stage2InputSregOut)
 	);
-	ID_EX_pipline id_ex(
+	ID_EX_pipeline id_ex(
 		.clk(clk),
 		.rst(rst),
 		.BranchTaken(pipeline1InputBranchTaken),
@@ -103,7 +95,7 @@ module pipeline(clk, rst, init);
 		.ShifOperandIn(stage2OUtputShiftOperandOut),
 		.SignedImmIn(stage2OutputSignImm24Out),
 		.DestIn(stage2OUtputDestOut),
-		.CarryIn(stage2InputSregOut),
+		.CarryIn(stage2InputSregOut[1]),
 		.MEM_WB_ENOut(pipeline2OutputMemWbEn),
 		.MEM_R_ENOut(pipeline2OutputMemREN),
 		.MEM_W_ENOut(pipeline2OutputMemWEn),
@@ -135,7 +127,7 @@ module pipeline(clk, rst, init);
 		.Imm(pipeline2OutputImm),
 		.ShiftOperand(pipeline2OutputShiftOperand),
 		.SignedImmediate(pipeline2OutputSignedImm),
-		.DestIn(pipeline2OutputCarry),
+		.DestIn(pipeline2OutputDest),
 		.CarryIn(pipeline2OutputCarry),
 		.ALUToSReg(stage3OutAluToSreg),
 		.ALUOut(stage3OutAluout),
@@ -151,7 +143,7 @@ module pipeline(clk, rst, init);
 	wire [31:0] pipeline3OutALURes, pipeline3OutRMVal;
 	wire [3:0] pipeline3OutDestOut;
 	
-	EX_MEM_pipline ex_mem(
+	EX_MEM_pipeline ex_mem(
 		.clk(clk),
 		.rst(rst),
 		.MEM_WB_ENIn(stage3OutMemWbEn),
@@ -167,6 +159,19 @@ module pipeline(clk, rst, init);
 		.RMValOut(pipeline3OutRMVal),
 		.DestOut(pipeline3OutDestOut)
 	);
+
+	hazardUnit hazard(
+		.src1(pipeline1OutputPC[19:16]), //Rn
+		.src2(HazaradSource2),
+		.TwoSrc(stage2OutputTwoSource),
+		.MEM_Dest(pipeline3OutDestOut),
+		.MEM_WB_EN(pipeline3OutMemWbEn),
+		.EXE_Dest(pipeline2OutputDest),
+		.EXE_WB_EN(pipeline2OutputMemWbEn),
+		.Hazard (hazardDetectionOutputHazard)
+	);
+
+
 	wire [31:0] stage4DataMemroyOut;
 	wire stage4;
 
