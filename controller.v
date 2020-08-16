@@ -1,128 +1,76 @@
-module controller (init_signal, clock, allBits, Zero, CarryOut, regFileWriteDataSel, selectR2, AluInputBSel, ALUfunction,
-	STM, LDM, /*enablePC,*/ enableZero, enableCarry, pcAdderInputASel, push, pop, pcInputSel, stall);
+module controller (clock, opcode, statusUpdate, mode, controllerOut);
+	input clock;
+	input[3:0]opcode;
+	input statusUpdate;
+	input[1:0]mode;
+	output [8:0]controllerOut; //4bits for execute command, 5bits for other 1bit signals
+	reg[3:0] exeCommand;
+	reg memWEn, memWBEn, memREn, branch, statusEnOut;  
 
-	input clock, init_signal;
-	input[18:0]allBits;
-	input Zero, CarryOut;
-	output reg stall;
-	output reg selectR2, AluInputBSel, STM, LDM/*, enablePC*/, enableZero, enableCarry, push, pop;
-	output reg [1:0] pcInputSel;
-	output reg pcAdderInputASel;
-	output reg regFileWriteDataSel;
-	output reg[3:0]ALUfunction;  //TODO: it should be 3 bits and add shiftrotate operation upcodes
+	always @(opcode, statusUpdate, mode) begin
+		memWEn <= 1'b 0;
+		memWBEn <= 1'b 0;
+		memREn <= 1'b 0;
+		branch <= 1'b 0;
+		statusEnOut <= statusUpdate;
 
-	// always @(posedge clock)
-	// 	enablePC <= 1'b1;
-
-	wire[1:0]lasttwoBits;
-	assign lasttwoBits = allBits[18:17];
-	wire[2:0]threeBitFn;
-	assign threeBitFn = allBits[16:14];
-	wire[2:0]lastthreeBits;
-	assign lastthreeBits = allBits[18:16];
-	wire[1:0]twoBitFn;
-	assign twoBitFn = allBits[15:14];
-	wire[4:0]lastfiveBits;
-	assign lastfiveBits = allBits[18:14];
-	wire[11:0]Adress;
-	assign Adress = allBits[11:0];
-	wire[5:0]lastsixBits;
-	assign lastsixBits = allBits[18:13];
-
-	always @(init_signal, allBits, CarryOut) begin
-		LDM <= 1'b0; STM <= 1'b0;
-		enableCarry <= 1'b0;
-		enableZero <= 1'b0;
-		ALUfunction <= 4'b1000;
-		push <= 1'b0; pop <= 1'b0; pcInputSel <= 2'b00; pcAdderInputASel <=1'b1;
-		stall <= 1'b0;
-
-		case(lasttwoBits)
-			2'b 00 : begin 
-				LDM <= 1'b1;
-				ALUfunction <= {1'b1, threeBitFn};
-				AluInputBSel <= 1'b0; // with 1 signal the mux choses usual 
-				selectR2 <= 1'b0; // with 1 signal the mux choses[7:5]
-				regFileWriteDataSel <= 1'b1; // with 00 signal the mux choses result of ALU
-				enableCarry<= 1'b1;
-				enableZero <= 1'b1;
-				end
-			2'b 01 : begin 
-				LDM <= 1'b1;
-				ALUfunction <= {1'b1, threeBitFn};
-				AluInputBSel <= 1'b1; //with 0 signal the mux choses immediate 
-				selectR2 <= 1'b1; // with 1 signal the mux choses[7:5]
-				regFileWriteDataSel <= 1'b1; // with 00 signal the mux choses result of ALU 
-				enableCarry <= 1'b1;
-				enableZero <= 1'b1;
-				end
-		endcase
-
-		case(lastthreeBits)
-			3'b 110: begin
-				ALUfunction <= {1'b0, 1'b0, twoBitFn};
-				regFileWriteDataSel <= 1'b1; // with 01 signal the mux choses result of shift_rotate
-				LDM <= 1'b1;
-				enableCarry <= 1'b1;
-				end
-			3'b 100: begin
-				if(twoBitFn == 2'b00) begin
-					LDM <= 1'b1;
-					ALUfunction <= 4'b1000;
-					regFileWriteDataSel <= 1'b0; // with 01 signal the mux choses result of dataMemory
-					AluInputBSel <= 1'b1;
-				end
-
-				if(twoBitFn == 2'b01) begin
-					STM <= 1'b1;
-					selectR2 <= 1'b1; // with 0 signal the mux choses[13:11]
-					AluInputBSel <= 1'b1;
-				end
+		case(mode)
+			2'b 00: begin //arithmetic
+				case (opcode)
+					4'b 1101: begin //MOV
+						exeCommand <= 4'b 0001;
+						memWBEn <= 1'b 1;
+					end
+					4'b 1111: begin //MVN
+						exeCommand <= 4'b 1001;
+						memWBEn <= 1'b 1;
+					end
+					4'b 0100: begin //ADD
+						exeCommand <= 4'b 0010;
+						memWBEn <= 1'b 1;
+					end
+					4'b 0101: begin //ADC
+						exeCommand <= 4'b 0011;
+						memWBEn <= 1'b 1;
+					end
+					4'b 0010: begin //SUB
+						exeCommand <= 4'b 0100;
+						memWBEn <= 1'b 1;
+					end
+					4'b 0110: begin //SBC
+						exeCommand <= 4'b 0101;
+						memWBEn <= 1'b 1;
+					end
+					4'b 0000: begin //AND
+						exeCommand <= 4'b 0110;
+						memWBEn <= 1'b 1;
+					end
+					4'b 1100: begin //ORR
+						exeCommand <= 4'b 0111;
+						memWBEn <= 1'b 1;
+					end
+					4'b 0001: begin //EOR
+						exeCommand <= 4'b 1000;
+						memWBEn <= 1'b 1;
+					end
+					4'b 1010: begin //CMP
+						exeCommand <= 4'b 0100;
+						statusEnOut <= 1'b 1;
+					end
+					4'b 1000: begin //TST
+						exeCommand <= 4'b 0110;
+						statusEnOut <= 1'b 1;
+					end	
+				endcase // opcode
+			end
+			2'b 01: begin //memory
+				if(statusUpdate==1'b 1)begin exeCommand<=4'b 0010; statusEnOut<=1'b 1; memREn<=1'b 1; memWBEn<=1'b 1; end
+				if(statusUpdate==1'b 0)begin exeCommand<=4'b 0010; memWEn<=1'b 1; end
+			end	
+			2'b 10: begin //branch
+				branch <= 1'b 1;
 			end 
-		endcase
-
-		case(lastthreeBits)
-			3'b 101: begin
-				// if ({twoBitFn , Zero} == 3'b 001) begin pcAdderInputASel <= 2'b00; end
-
-				if ({twoBitFn , Zero} == 3'b 001) begin pcAdderInputASel <= 1'b0; stall <= 1'b1; end
-
-				// if ({twoBitFn , Zero} == 3'b 010) begin pcAdderInputASel <= 2'b00; stall <= 1'b1; end
-
-				if ({twoBitFn , Zero} == 3'b 010) begin pcAdderInputASel <= 1'b0; stall <= 1'b1; end
-
-				// if ({twoBitFn , CarryOut} == 3'b 101) begin pcAdderInputASel <= 2'b00; stall <= 1'b1; end
-
-				if ({twoBitFn , CarryOut} == 3'b 101) begin pcAdderInputASel <= 1'b0; stall <= 1'b1; end
-
-				// if ({twoBitFn , CarryOut} == 3'b 110) begin pcAdderInputASel <= 2'b00; stall <= 1'b1; end
-
-				if ({twoBitFn , CarryOut} == 3'b 110) begin pcAdderInputASel <= 1'b0; stall <= 1'b1; end
-			end
-		endcase 
-
-		case(lastfiveBits)
-			5'b 11100: begin
-				pcInputSel <= 2'b10;
-				stall <= 1'b1;
-				end
-
-			5'b 11101: begin
-				pcInputSel <= 2'b10;
-				stall <= 1'b1;
-				push <= 1'b1;
-				//TODO: is pc value in this clock, the correct pc value?
-			end
-		endcase 
-
-		case(lastsixBits)
-			6'b 111100: begin
-				pop <= 1'b1;
-				pcInputSel <= 2'b10;
-				stall <= 1'b1;
-			end
-		endcase
-
+		endcase // mode
 	end
-
+	assign controllerOut = {memWBEn, memREn, memWEn, exeCommand, branch, statusEnOut};
 endmodule

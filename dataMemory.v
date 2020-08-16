@@ -1,7 +1,7 @@
 module dataMemory(clock, memWrite, address, data, out);
 	input clock, memWrite;
 	input[10:0] address;// 1024 + 256 = 1280
-	input [31:0] data
+	input [31:0] data;
 	output [31:0] out;
 
 	reg[31:0] word[1280:1024];
