@@ -28,6 +28,8 @@ module pipeline(clk, rst, init);
 	wire pipeline4OutMemWbEn, pipeline4OutMemREn ;
 	wire [3:0] stage3OutAluToSreg, stage3OutDest;
 
+	wire[3:0] stage2RNOut;
+
 
 	stage1 s1(
 		.clk(clk),
@@ -50,13 +52,14 @@ module pipeline(clk, rst, init);
 		.InstructionOut(pipeline1OutputINstruction)
 	);
 
+	wire [3:0] pipeline4OutDest;
 	stage2 s2(
 		.clk(clk),
 		.rst(rst),
 		.init(init),
 		.instruction(pipeline1OutputINstruction),
 		.Hazard(hazardDetectionOutputHazard),
-		.WB_Dest(step5OutputWB_Dest),
+		.WB_Dest(pipeline4OutDest),
 		.WB_Value(stage5OutputWB_Value),
 		.WB_WB_EN(pipeline4OutMemWbEn),
 		.RegisterReadAddress2(HazaradSource2),
@@ -73,7 +76,8 @@ module pipeline(clk, rst, init);
 		.SignImm24Out(stage2OutputSignImm24Out),
 		.DestOut(stage2OUtputDestOut),
 		.Val_Rn(stage2OutputValRn),
-		.Val_Rm(stage2OutputValRm)
+		.Val_Rm(stage2OutputValRm),
+		.Rn(stage2RNOut)
 	);
 
 
@@ -114,7 +118,8 @@ module pipeline(clk, rst, init);
 		.ShifOperandOut(pipeline2OutputShiftOperand),
 		.SignedImmOut(pipeline2OutputSignedImm),
 		.DestOut(pipeline2OutputDest),
-		.CarryOut(pipeline2OutputCarry)
+		.CarryOut(pipeline2OutputCarry),
+		.Freeze(hazardDetectionOutputHazard)
 	);
 	wire [31:0] stage3OutAluout, stage3OutRmValOut;
 	wire stage3OutMemrEn, stage3OutMemWbEn, stage3OutMemwEn;
@@ -162,12 +167,13 @@ module pipeline(clk, rst, init);
 		.MEM_W_ENOut(pipeline3OutMemWEn),
 		.ALUResOut(pipeline3OutALURes),
 		.RMValOut(pipeline3OutRMVal),
-		.DestOut(pipeline3OutDestOut)
+		.DestOut(pipeline3OutDestOut),
+		.Freeze(hazardDetectionOutputHazard)
 	);
 
 	hazardUnit hazard(
-		.src1(pipeline1OutputINstruction[19:16]), //Rn
-		.src2(HazaradSource2),
+		.src1(HazaradSource2), 
+		.src2(stage2RNOut),
 		.TwoSrc(stage2OutputTwoSource),
 		.MEM_Dest(pipeline3OutDestOut),
 		.MEM_WB_EN(pipeline3OutMemWbEn),
@@ -190,13 +196,13 @@ module pipeline(clk, rst, init);
 	);
 
 	wire [31:0] pipeline4OutDataMem, pipeline4OutAluRes;
-	wire [3:0] pipeline4OutDest;
+	
 
 
 	MEM_WB_pipeline mem_wb(
 		.clk(clk),
 		.rst(rst),
-		.MEM_WB_ENIn(pipeline3OutMemWEn),
+		.MEM_WB_ENIn(pipeline3OutMemWbEn),
 		.MEM_R_ENIn(pipeline3OutMemREn),
 		.ALUResIn(pipeline3OutALURes),
 		.DataMemResIn(stage4DataMemroyOut),
@@ -205,7 +211,8 @@ module pipeline(clk, rst, init);
 		.MEM_R_ENOut(pipeline4OutMemREn),
 		.ALUResOut(pipeline4OutAluRes),
 		.DataMemResOut(pipeline4OutDataMem),
-		.DestOut(pipeline4OutDest)
+		.DestOut(pipeline4OutDest),
+		.Freeze(hazardDetectionOutputHazard)
 	);
 
 	stage5 s5(

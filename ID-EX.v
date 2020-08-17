@@ -1,4 +1,4 @@
-module ID_EX_pipeline(clk, rst, BranchTaken, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn, EXE_CMDIn, BIn, SIn, PCIn, RNValIn, RMValIn,
+module ID_EX_pipeline(clk, rst, Freeze, BranchTaken, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn, EXE_CMDIn, BIn, SIn, PCIn, RNValIn, RMValIn,
 						ImmIn, ShifOperandIn, SignedImmIn, DestIn, CarryIn, MEM_WB_ENOut, MEM_R_ENOut, MEM_W_ENOut, EXE_CMDOut,
 						BOut, SOut, PCOut, RNValOut, RMValOut, ImmOut, ShifOperandOut, SignedImmOut, DestOut, CarryOut);
 	input clk, rst, BranchTaken, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn; //TODO branch taken should be enable
@@ -19,10 +19,12 @@ module ID_EX_pipeline(clk, rst, BranchTaken, MEM_WB_ENIn, MEM_R_ENIn, MEM_W_ENIn
 	output [23:0] SignedImmOut;
 	output [3:0] DestOut;
 	output CarryOut;
+	input Freeze;
 
-	register  #(.size(147)) Reg(
+	registerWitEnb  #(.size(147)) Reg(
 		.clock(clk), 
 		.reset(rst || BranchTaken), 
+		.enable(1),
 		.regIn({MEM_WB_ENIn,MEM_R_ENIn,MEM_W_ENIn,EXE_CMDIn,BIn,SIn,PCIn,RNValIn,RMValIn,ImmIn,ShifOperandIn,SignedImmIn,DestIn,CarryIn}), 
 		.regOut({MEM_WB_ENOut,MEM_R_ENOut,MEM_W_ENOut,EXE_CMDOut,BOut,SOut,PCOut,RNValOut,RMValOut,ImmOut,ShifOperandOut,SignedImmOut,DestOut,CarryOut})
 	); 

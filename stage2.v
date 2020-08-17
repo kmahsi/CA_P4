@@ -1,5 +1,5 @@
 module stage2(clk, rst, init, instruction, Hazard, WB_Dest, WB_Value, WB_WB_EN, RegisterReadAddress2,
-	MEM_WB_EN, MEM_R_EN, MEM_W_EN, EXE_CMD, B, S, SregOut, two_src, OutImm, ShiftOperandOut, SignImm24Out, DestOut, Val_Rn, Val_Rm);
+	MEM_WB_EN, MEM_R_EN, MEM_W_EN, EXE_CMD, B, S, SregOut, two_src, OutImm, ShiftOperandOut, SignImm24Out, DestOut, Val_Rn, Val_Rm, Rn);
 	
 	input clk, rst, init;
 	input [31:0] instruction;
@@ -16,12 +16,13 @@ module stage2(clk, rst, init, instruction, Hazard, WB_Dest, WB_Value, WB_WB_EN, 
 	wire ConditionCheckOut;
 	output [31:0] Val_Rn, Val_Rm;
 
-	wire [3:0] Rn, Rd, Rm;
+	output [3:0] Rn;
+	wire [3:0] Rd, Rm;
 	output[3:0] RegisterReadAddress2;
 	assign Rn = instruction[19:16];
 	assign Rd = instruction[15:12];
 	assign Rm = instruction[3:0];
-	assign two_src = MEM_W_EN | (^ (instruction[25]));
+	assign two_src = MEM_W_EN || (~ (instruction[25]));
 	assign OutImm = instruction[25];
 	assign ShiftOperandOut = instruction[23:0];
 	assign SignImm24Out = instruction[25];

@@ -4,15 +4,14 @@ module registerFile(clock, regWrite, writeRegister, writeData, readRegister1, re
   input [31:0] writeData;
   output [31:0] readData2, readData1;
 
-  reg[7:0] registers[7:0]; 
+  reg[31:0] registers[15:0]; 
   assign readData1 = registers[readRegister1];
   assign readData2 = registers[readRegister2];
 
   always @(posedge clock, negedge clock) begin
     if (regWrite)begin
-      if(writeRegister != 0) registers[writeRegister] <= writeData;
+      registers[writeRegister] <= writeData;
     end
-    registers[0] = 0;
   end
 
 endmodule
