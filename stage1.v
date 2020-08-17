@@ -1,5 +1,5 @@
-module stage1(clk, rst, pcEnb, BrachTaken, PCAdder1Out, BranchAddress, InstMemoryOut);
-	input BrachTaken;
+module stage1(clk, rst, pcEnb, BranchTaken, PCAdder1Out, BranchAddress, InstMemoryOut);
+	input BranchTaken;
 	input clk, rst;
 	wire [31:0] pcOut;
 	wire [31:0] pcIn;
@@ -11,7 +11,7 @@ module stage1(clk, rst, pcEnb, BrachTaken, PCAdder1Out, BranchAddress, InstMemor
 	mux_2_input  #(.WORD_LENGTH (32)) MUX1 (    //pc input max
 		.in1(PCAdder1Out), 
 		.in2(BranchAddress), 
-		.sel(BrachTaken), 
+		.sel(BranchTaken), 
 		.out(pcIn)
 	);
 

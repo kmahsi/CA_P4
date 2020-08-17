@@ -7,7 +7,7 @@ module ConditionCheck(Cond, Status, result);
 	input[3:0] Cond, Status;
 	output reg result;
 
-	always @(*) begin
+	always @(Cond, Status) begin
 		case (Cond)
 			4'b 0000: begin
 				result = Status[`ZERO];

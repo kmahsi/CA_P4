@@ -7,7 +7,7 @@ module val2Generator(RMVal, Imm, ShiftOperand, LdOrStr, result);
   
   
   integer i;
-	always @(*) begin
+	always @(RMVal, Imm, LdOrStr, ShiftOperand) begin
 		
 		result <= 32'b 0;
 		if (LdOrStr) begin result <= { {20{ShiftOperand[11]}}, ShiftOperand }; end

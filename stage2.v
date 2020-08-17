@@ -31,7 +31,7 @@ module stage2(clk, rst, init, instruction, Hazard, WB_Dest, WB_Value, WB_WB_EN, 
 	controller CU (
 		.clock(clk), 
 		.opcode(instruction[24:21]), 
-		.statusUpdate(S), 
+		.statusUpdate(instruction[20]), 
 		.mode(instruction[27:26]), 
 		.controllerOut(ControllerOutput)
 	);
@@ -45,7 +45,7 @@ module stage2(clk, rst, init, instruction, Hazard, WB_Dest, WB_Value, WB_WB_EN, 
 	mux_2_input  #(.WORD_LENGTH (9)) MUX3 (    //mux 8
 		.in1(ControllerOutput), 
 		.in2(9'd 0), 
-		.sel(Hazard | (^ConditionCheckOut)), 
+		.sel(Hazard || (~ConditionCheckOut)), 
 		.out({MEM_WB_EN, MEM_R_EN, MEM_W_EN, EXE_CMD, B, S})
 	);
 

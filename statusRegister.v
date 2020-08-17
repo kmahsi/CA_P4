@@ -6,8 +6,8 @@ module statusRegister(S, newStatus, result);
 
 	reg[3:0] currStatus;
 
-	always @(*) begin 
-		if (S) begin currStatus <= newStatus; end
+	always @(S, newStatus) begin 
+		if (S) begin currStatus = newStatus; end
 	end
 
 	assign result = currStatus;

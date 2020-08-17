@@ -2,9 +2,13 @@ module pipeline(clk, rst, init);
 	input clk, rst, init;
 
 	wire pipeline1InputBranchTaken;
+	assign pipeline1InputBranchTaken = 0;
+
 	wire [31:0] pipeline1InputInstruction, pipeline1OutputINstruction;
 	wire [31:0] pipeline1InputPC, pipeline1OutputPC;
 	wire hazardDetectionOutputHazard;
+	// assign hazardDetectionOutputHazard = 0;
+
 	wire [31:0] stage3OutputBranchAddress;
 	wire [3:0] step5OutputWB_Dest;
 	wire [31:0] stage5OutputWB_Value;
@@ -24,11 +28,12 @@ module pipeline(clk, rst, init);
 	wire pipeline4OutMemWbEn, pipeline4OutMemREn ;
 	wire [3:0] stage3OutAluToSreg, stage3OutDest;
 
+
 	stage1 s1(
 		.clk(clk),
 		.rst(rst),
-		.pcEnb(hazardDetectionOutputHazard),
-		.BrachTaken(pipeline1InputBranchTaken),
+		.pcEnb(~hazardDetectionOutputHazard),
+		.BranchTaken(pipeline1InputBranchTaken),
 		.PCAdder1Out(pipeline1InputPC),
 		.BranchAddress(stage3OutputBranchAddress),
 		.InstMemoryOut(pipeline1InputInstruction)
@@ -161,7 +166,7 @@ module pipeline(clk, rst, init);
 	);
 
 	hazardUnit hazard(
-		.src1(pipeline1OutputPC[19:16]), //Rn
+		.src1(pipeline1OutputINstruction[19:16]), //Rn
 		.src2(HazaradSource2),
 		.TwoSrc(stage2OutputTwoSource),
 		.MEM_Dest(pipeline3OutDestOut),
